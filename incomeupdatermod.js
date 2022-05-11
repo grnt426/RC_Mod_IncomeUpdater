@@ -6,11 +6,25 @@ class IncomeUpdate {
         this.SOURCE_DIR = "./dist/main/";
         this.CONFIG_FILE = "incomeupdate_config.json";
         this.lastUpdateTimeSeconds = undefined;
+        this.failures = 0;
 
         this.resources = {
             cred:{},
             tech:{},
             ideo:{},
+        };
+
+        // These are the default write locations for resources; as used by this example sheet:
+        // https://docs.google.com/spreadsheets/d/15odMYjnZIDRx05W-11griZDN72sZKVwkLC0jGRKYvC0/edit#gid=0
+        this.cellsForResources = {
+            "income_total": "B2",
+            "income_rate": "B3",
+
+            "tech_total": "C2",
+            "tech_rate": "C3",
+
+            "ideo_total": "D2",
+            "ideo_rate": "D3"
         };
 
         fs.access(this.#getConfigFile(), () => {
@@ -22,10 +36,17 @@ class IncomeUpdate {
                     try {
                         let config = JSON.parse(data);
                         this.URL = config.url ? config.url : this.URL;
-                        this.sheetId = config.sheetId;
 
-                        if(!this.sheetId) {
+
+                        if(config.sheetId) {
+                            this.sheetId = config.sheetId;
+                        }
+                        else {
                             window.granite.debug("Need a Google Sheets ID.");
+                        }
+
+                        if(config.cell_locations) {
+                            this.cellsForResources = config.cell_locations;
                         }
                     }
                     catch(err) {
@@ -54,7 +75,7 @@ class IncomeUpdate {
             return;
 
         // Ignore non-legacy games for now. This prevents players who play legacy from overwriting their
-        // sheets with non-legacy stuff.
+        // sheets with non-legacy stuff if they switch around.
         if(window.gamestate.game.time.speed !== "slow")
             return;
 
@@ -76,7 +97,10 @@ class IncomeUpdate {
     }
 
     #regularUpdate() {
-        if(this.lastUpdateTimeSeconds) {
+
+        // We have a very simple guard against too many failures from our server. This prevents excessive calls that
+        // we know will fail anyway. This can be improved, but it should prevent really dumb situations for now.
+        if(this.lastUpdateTimeSeconds && this.failures < 100) {
             let xhr = new XMLHttpRequest();
             xhr.open("POST", this.URL + "/income_update");
             xhr.timeout = 2000;
@@ -85,11 +109,22 @@ class IncomeUpdate {
                 JSON.stringify(
                     {
                         "income": this.resources,
+                        "cell_locations": this.cellsForResources,
                         "instance": window.gamestate.game.auth.instance,
                         "sheet": this.sheetId
                     }
                 )
             );
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if(xhr.status !== 200) {
+                        let resp = xhr.responseText;
+                        window.granite.debug("Issue in sending income to API: " + resp + " | Status: " + xhr.statusText);
+                        this.failures += 1;
+                    }
+                }
+            }
         }
     }
 

@@ -1,4 +1,14 @@
 {
   "url": "https://rc-mod-api.com",
-  "sheetId": "find_me_in_the_url_of_the_sheets_page_very_long"
+  "sheetId": "find_me_in_the_url_of_the_sheets_page_very_long",
+  "cell_locations": {
+    "income_total": "B2",
+    "income_rate": "B3",
+
+    "tech_total": "C2",
+    "tech_rate": "C3",
+
+    "ideo_total": "D2",
+    "ideo_rate": "D3"
+  }
 }
