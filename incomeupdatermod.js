@@ -7,6 +7,7 @@ class IncomeUpdate {
         this.CONFIG_FILE = "incomeupdate_config.json";
         this.lastUpdateTimeSeconds = undefined;
         this.failures = 0;
+        this.name = "Income Update Mod";
 
         this.resources = {
             cred:{},
@@ -56,7 +57,7 @@ class IncomeUpdate {
             });
         });
 
-        setInterval(this.#regularUpdate, 60_000);
+        this.regularUpdateInterval = setInterval(this.#regularUpdate.bind(this), 60_000);
     }
 
     #getConfigFile() {
@@ -80,7 +81,7 @@ class IncomeUpdate {
             return;
 
         if(this.lastUpdateTimeSeconds === undefined) {
-            this.lastUpdateTimeSeconds = IncomeUpdate.#getCurrentTimeSeconds();
+            this.lastUpdateTimeSeconds = this.#getCurrentTimeSeconds();
         }
 
         let income = data.player_player;
@@ -89,7 +90,7 @@ class IncomeUpdate {
         this.resources.tech = income.technology;
         this.resources.ideo = income.ideology;
 
-        this.#calcResourceTotals(IncomeUpdate.#getCurrentTimeSeconds());
+        this.#calcResourceTotals(this.#getCurrentTimeSeconds());
     }
 
     #getCurrentTimeSeconds() {
@@ -98,9 +99,13 @@ class IncomeUpdate {
 
     #regularUpdate() {
 
+        console.log("Update entered: " + this.lastUpdateTimeSeconds);
+
         // We have a very simple guard against too many failures from our server. This prevents excessive calls that
         // we know will fail anyway. This can be improved, but it should prevent really dumb situations for now.
         if(this.lastUpdateTimeSeconds && this.failures < 100) {
+            console.log("Updating totals.");
+            this.#calcResourceTotals(this.#getCurrentTimeSeconds());
             let xhr = new XMLHttpRequest();
             xhr.open("POST", this.URL + "/income_update");
             xhr.timeout = 2000;
@@ -108,7 +113,7 @@ class IncomeUpdate {
             xhr.send(
                 JSON.stringify(
                     {
-                        "income": this.resources,
+                        "resources": this.resources,
                         "cell_locations": this.cellsForResources,
                         "instance": window.gamestate.game.auth.instance,
                         "sheet": this.sheetId
@@ -118,10 +123,14 @@ class IncomeUpdate {
 
             xhr.onreadystatechange = () => {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
+                    console.log("Response.");
                     if(xhr.status !== 200) {
                         let resp = xhr.responseText;
                         window.granite.debug("Issue in sending income to API: " + resp + " | Status: " + xhr.statusText);
                         this.failures += 1;
+                    }
+                    else {
+                        console.log("Bad response. " + xhr.status + " Body: " + xhr.responseText);
                     }
                 }
             }
