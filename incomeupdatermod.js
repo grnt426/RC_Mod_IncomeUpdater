@@ -57,7 +57,7 @@ class IncomeUpdate {
             });
         });
 
-        this.regularUpdateInterval = setInterval(this.#regularUpdate.bind(this), 60_000);
+        this.regularUpdateInterval = setInterval(this.#regularUpdate.bind(this), 30_000);
     }
 
     #getConfigFile() {
@@ -130,7 +130,7 @@ class IncomeUpdate {
                         this.failures += 1;
                     }
                     else {
-                        console.log("Bad response. " + xhr.status + " Body: " + xhr.responseText);
+                        console.debug("Successfully updated income");
                     }
                 }
             }
