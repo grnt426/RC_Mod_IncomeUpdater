@@ -35,5 +35,5 @@ docs.google.com/spreadsheets/d/**VERY_LONG_STRING_OF_LETTERS_AND_NUMBERS_THIS_IS
 
 Where the bolded part is the ENTIRE ID you will need to past into the `incomeupdate_config.json` file you created.
 
-3) [Optional] You can also change where the income values are written to by changing the cell IDs.
+3) [Optional] (NOT IMPLEMENTED FULLY) You can also change where the income values are written to by changing the cell IDs.
 4) You're done!

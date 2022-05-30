@@ -31,7 +31,10 @@ class IncomeUpdate {
         fs.access(this.#getConfigFile(), () => {
             fs.readFile(this.#getConfigFile(), "utf-8", (err, data) => {
                 if(err) {
-                    window.granite.debug("Error in reading config for IncomeUpdate: " + err);
+                    window.granite.debug(
+                        "Error in reading config for IncomeUpdate: " + err,
+                        window.granite.levels.ERROR
+                    );
                 }
                 else {
                     try {
@@ -43,7 +46,7 @@ class IncomeUpdate {
                             this.sheetId = config.sheetId;
                         }
                         else {
-                            window.granite.debug("Need a Google Sheets ID.");
+                            window.granite.debug("Need a Google Sheets ID.", window.granite.levels.ERROR);
                         }
 
                         if(config.cell_locations) {
@@ -51,7 +54,10 @@ class IncomeUpdate {
                         }
                     }
                     catch(err) {
-                        window.granite.debug("Error in parsing config for IncomeUpdate: " + err);
+                        window.granite.debug(
+                            "Error in parsing config for IncomeUpdate: " + err,
+                            window.granite.levels.ERROR
+                        );
                     }
                 }
             });
@@ -104,7 +110,7 @@ class IncomeUpdate {
         // We have a very simple guard against too many failures from our server. This prevents excessive calls that
         // we know will fail anyway. This can be improved, but it should prevent really dumb situations for now.
         if(this.lastUpdateTimeSeconds && this.failures < 100) {
-            console.log("Updating totals.");
+            window.granite.debug("Updating totals.", window.granite.levels.DEBUG);
             this.#calcResourceTotals(this.#getCurrentTimeSeconds());
             let xhr = new XMLHttpRequest();
             xhr.open("POST", this.URL + "/income_update");
@@ -123,14 +129,17 @@ class IncomeUpdate {
 
             xhr.onreadystatechange = () => {
                 if (xhr.readyState === XMLHttpRequest.DONE) {
-                    console.log("Response.");
+                    window.granite.debug("Response.", window.granite.levels.DEBUG);
                     if(xhr.status !== 200) {
                         let resp = xhr.responseText;
-                        window.granite.debug("Issue in sending income to API: " + resp + " | Status: " + xhr.statusText);
+                        window.granite.debug(
+                            "Issue in sending income to API: " + resp + " | Status: " + xhr.statusText,
+                            window.granite.levels.ERROR
+                        );
                         this.failures += 1;
                     }
                     else {
-                        console.debug("Successfully updated income");
+                        window.granite.debug("Successfully updated income", window.granite.levels.DEBUG);
                     }
                 }
             }
@@ -157,4 +166,4 @@ class IncomeUpdate {
     }
 }
 
-window.granite.addHookListener(new IncomeUpdate());
+console.addHookListener(new IncomeUpdate());
