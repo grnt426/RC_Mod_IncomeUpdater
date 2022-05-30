@@ -133,7 +133,7 @@ class IncomeUpdate {
                     if(xhr.status !== 200) {
                         let resp = xhr.responseText;
                         window.granite.debug(
-                            "Issue in sending income to API: " + resp + " | Status: " + xhr.statusText,
+                            "Issue in sending income to API: " + resp + " | Status: " + xhr.status,
                             window.granite.levels.ERROR
                         );
                         this.failures += 1;
@@ -166,4 +166,4 @@ class IncomeUpdate {
     }
 }
 
-console.addHookListener(new IncomeUpdate());
+window.granite.addHookListener(new IncomeUpdate());
